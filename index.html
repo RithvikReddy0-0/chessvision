@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ChessVision — a photograph becomes a plan</title>
+  <meta name="description" content="A full computer-vision pipeline that turns a photo of a chessboard into a position and a plan: board detection, a CNN over 64 squares, FEN reconstruction, and a real engine's best move." />
+  <meta name="theme-color" content="#0b0b0f" />
+  <meta property="og:title" content="ChessVision — a photograph becomes a plan" />
+  <meta property="og:description" content="Snap a chessboard. Detect it, classify 64 squares, rebuild the position as FEN, ask the engine for the best move." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%99%9E%3C/text%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <!-- animated film grain -->
+  <svg class="grain" aria-hidden="true"><filter id="grainf"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(#grainf)"/></svg>
+
+  <header class="nav">
+    <a class="nav__brand" href="#top">♞ CHESS<span>VISION</span></a>
+    <nav class="nav__links">
+      <a href="#pipeline">The Pipeline</a>
+      <a href="#play">Try It</a>
+      <a href="https://github.com/RithvikReddy0-0/Computer_V" target="_blank" rel="noopener">Source ↗</a>
+    </nav>
+  </header>
+
+  <!-- ───────── HERO ───────── -->
+  <section class="hero" id="top">
+    <div class="hero__pieces" aria-hidden="true">
+      <span style="--d:0">♜</span><span style="--d:1">♞</span><span style="--d:2">♝</span>
+      <span style="--d:3">♛</span><span style="--d:4">♚</span><span style="--d:5">♟</span>
+    </div>
+    <div class="hero__inner">
+      <p class="eyebrow">A computer-vision pipeline · not a single model</p>
+      <h1 class="hero__title">A photograph<br/>becomes a <em>plan</em>.</h1>
+      <p class="hero__dek">
+        Point a camera at a chessboard. <s>Squint.</s> <s>Guess.</s>
+        Instead: find the board, classify all sixty-four squares, rebuild the
+        position as FEN, and ask a real engine for the best move.
+      </p>
+      <div class="hero__cta">
+        <a class="btn btn--solid" href="#pipeline">See how it works</a>
+        <a class="btn" href="#play">Skip to the board ↓</a>
+      </div>
+    </div>
+    <div class="hero__scroll" aria-hidden="true">SCROLL</div>
+  </section>
+
+  <!-- ───────── PIPELINE ───────── -->
+  <section class="pipeline" id="pipeline">
+    <div class="pipeline__intro">
+      <span class="tag">THE PIPELINE</span>
+      <h2>Four stages, four honest metrics.</h2>
+      <p>Each stage is a self-contained chapter — and each has a number you can actually measure.</p>
+    </div>
+
+    <!-- Stage 1 -->
+    <article class="stage" data-stage="1">
+      <div class="stage__sticky">
+        <div class="viz viz--photo">
+          <div class="board3d" data-board3d>
+            <div class="board3d__grid" data-grid3d></div>
+          </div>
+          <span class="viz__caption mono">input · a photo, at an angle</span>
+        </div>
+      </div>
+      <div class="stage__copy">
+        <span class="stage__num mono">01</span>
+        <h3>The Photograph</h3>
+        <p>It starts with a real, messy image — a board shot from across the table, tilted, uneven light. No assumptions about alignment.</p>
+        <p class="stage__metric mono"><b>classical CV</b> · contours, Hough lines, homography</p>
+      </div>
+    </article>
+
+    <!-- Stage 2 -->
+    <article class="stage" data-stage="2">
+      <div class="stage__sticky">
+        <div class="viz viz--detect">
+          <div class="board3d board3d--warping" data-board-warp>
+            <div class="board3d__grid" data-grid-warp></div>
+            <svg class="detect-overlay" viewBox="0 0 320 320" data-detect>
+              <polygon class="detect-quad" points="40,70 280,50 300,300 20,280" />
+              <circle class="detect-dot" cx="40" cy="70" r="6"/><circle class="detect-dot" cx="280" cy="50" r="6"/>
+              <circle class="detect-dot" cx="300" cy="300" r="6"/><circle class="detect-dot" cx="20" cy="280" r="6"/>
+            </svg>
+          </div>
+          <span class="viz__caption mono">detect corners → warp to a clean 8×8</span>
+        </div>
+      </div>
+      <div class="stage__copy">
+        <span class="stage__num mono">02</span>
+        <h3>Finding the Board</h3>
+        <p>Detect the four corners, then warp the perspective so the board becomes a flat, square grid — the hard, interesting part, where real photos fight back.</p>
+        <p class="stage__metric mono"><b>metric</b> · board-detection success rate</p>
+      </div>
+    </article>
+
+    <!-- Stage 3 -->
+    <article class="stage" data-stage="3">
+      <div class="stage__sticky">
+        <div class="viz viz--classify">
+          <div class="board2d" data-classify></div>
+          <span class="viz__caption mono">a CNN classifies each of the 64 tiles</span>
+        </div>
+      </div>
+      <div class="stage__copy">
+        <span class="stage__num mono">03</span>
+        <h3>Reading 64 Squares</h3>
+        <p>Slice the warped board into sixty-four tiles and run a CNN over each one — empty, or one of twelve piece classes. One square at a time, with a confidence.</p>
+        <p class="stage__metric mono"><b>metric</b> · per-square & whole-board accuracy</p>
+      </div>
+    </article>
+
+    <!-- Stage 4 -->
+    <article class="stage" data-stage="4">
+      <div class="stage__sticky">
+        <div class="viz viz--fen">
+          <div class="board2d" data-fenboard></div>
+          <code class="fenout mono" data-fen>…</code>
+          <span class="viz__caption mono">assemble predictions → a legal FEN</span>
+        </div>
+      </div>
+      <div class="stage__copy">
+        <span class="stage__num mono">04</span>
+        <h3>The Position → The Plan</h3>
+        <p>Turn sixty-four predictions into a single legal FEN string — the universal language of a chess position — and hand it to a real engine for the best move.</p>
+        <p class="stage__metric mono"><b>downstream</b> · Stockfish, the move, the eval</p>
+      </div>
+    </article>
+  </section>
+
+  <!-- ───────── INTERACTIVE ───────── -->
+  <section class="play" id="play">
+    <div class="play__head">
+      <span class="tag">TRY IT</span>
+      <h2>Pick a position. Watch the engine think.</h2>
+      <p>These are the last frame of the pipeline — a reconstructed position and the move a real engine picks. Choose one.</p>
+    </div>
+
+    <div class="play__stage">
+      <div class="play__boardwrap">
+        <div class="board2d board2d--xl" data-playboard></div>
+        <svg class="movearrow" viewBox="0 0 8 8" data-arrow aria-hidden="true">
+          <defs><marker id="ah" markerWidth="4" markerHeight="4" refX="2" refY="2" orient="auto">
+            <path d="M0,0 L4,2 L0,4 z" fill="currentColor"/></marker></defs>
+          <line data-arrowline x1="0" y1="0" x2="0" y2="0" marker-end="url(#ah)" />
+        </svg>
+      </div>
+      <aside class="play__panel">
+        <div class="play__cards" data-cards></div>
+        <div class="play__readout">
+          <div class="readout__row"><span class="mono">FEN</span><code class="mono" data-playfen>—</code></div>
+          <div class="readout__row"><span class="mono">BEST MOVE</span><b class="readout__move" data-move>—</b></div>
+          <div class="readout__row"><span class="mono">EVAL</span><span class="mono" data-eval>—</span></div>
+          <p class="readout__note" data-note>Pick a position to see the engine's call.</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <div class="foot__inner">
+      <p class="foot__big">image → board → <em>FEN</em> → move.</p>
+      <div class="foot__links">
+        <a href="https://github.com/RithvikReddy0-0/Computer_V" target="_blank" rel="noopener">GitHub ↗</a>
+        <a href="https://rithvikreddy.dev" target="_blank" rel="noopener">rithvikreddy.dev ↗</a>
+      </div>
+      <p class="foot__fine mono">Built by Rithvik Reddy · ChessVision · a CV pipeline you can read</p>
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="./main.js"></script>
+</body>
+</html>
